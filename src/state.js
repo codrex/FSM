@@ -8,7 +8,7 @@ class State {
    * @return {undefined}
    */
   constructor(stateTransitions, stateData) {
-    const transitions = stateTransitions;
+    const transitions = this.createTransitionObject(stateTransitions);
     this.getTransitions = () => {
       return transitions;
     };
@@ -25,6 +25,25 @@ class State {
   }
 
   /**
+   * @param {Array} transitions
+   * @return {undefined}
+   */
+  createTransitionObject = transitions => {
+    if (transitions) {
+      return transitions.reduce((accumulator, currentValue) => {
+        const { name, ...rest } = currentValue;
+        if (!name || typeof name !== 'string') {
+          throw new Error('transition name must be a value of type string');
+        }
+        if (name.trim() === '') {
+          throw new Error('transition name cannot be an empty string');
+        }
+        return { ...accumulator, [name]: { ...rest } };
+      }, {});
+    }
+  };
+
+  /**
    *
    * @param {string} transitionName
    * @param {Function} validationCB
@@ -32,15 +51,19 @@ class State {
    */
   doTransition(transitionName, validationCB) {
     const transitions = this.getTransitions();
-    if (
-      // eslint-disable-next-line
-      transitions.hasOwnProperty(transitionName) &&
-      (validationCB && validationCB())
-    ) {
-      this.FSMUpdater(transitions[transitionName]);
-      // eslint-disable-next-line
-    } else if (transitions.hasOwnProperty(transitionName)) {
-      this.FSMUpdater(transitions[transitionName]);
+    const hasOwnProperty = Object.prototype.hasOwnProperty.call(
+      transitions,
+      transitionName
+    );
+
+    if (hasOwnProperty && validationCB) {
+      if (validationCB()) {
+        return this.FSMUpdater(transitions[transitionName]);
+      }
+      return;
+    }
+    if (hasOwnProperty) {
+      return this.FSMUpdater(transitions[transitionName]);
     }
   }
 }

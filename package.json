@@ -23,6 +23,12 @@
     "nodemon": "^1.17.2"
   },
   "scripts": {
-    "run": "nodemon --exec babel-node src/index.js"
+    "run": "nodemon --exec babel-node src/index.js",
+    "test": "jest",
+    "shc": "open coverage/lcov-report/index.html"
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.24.1",
+    "jest": "^22.4.3"
   }
 }
