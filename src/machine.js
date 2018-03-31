@@ -4,25 +4,66 @@
 class Machine {
   /**
    * @param {Object} states
-   * @param {string} machineState
+   * @param {string} currentMachineState
    */
-  constructor(states, machineState) {
+  constructor(states, currentMachineState) {
     this.states = { ...states };
-    let currentState = machineState;
-    this.getCurrentState = () => {
-      return currentState;
+    let currentStateObject = this.setState(currentMachineState, true);
+
+    this.getCurrentStateObject = () => {
+      return currentStateObject;
     };
-    this.setCurrentState = state => {
-      currentState = state;
+
+    this.setCurrentStateObject = state => {
+      currentStateObject = this.setState(state);
     };
+
+    this.currentState = currentMachineState;
   }
 
   /**
-   * @return {undefined}
-   * @param {Object} transition
+   * @param {string} state
+   * @param {bool} isInitialState
+   * @return {Object} current state object or an error object
    */
-  updater = transition => {
-    this.setCurrentState(transition.to);
+  setState = (state, isInitialState) => {
+    const type = typeof state;
+    if (type !== 'string') {
+      return new Error('expected a string for initial but got ' + type);
+    }
+
+    if (isInitialState) {
+      const keys = Object.keys(this.states); //eslint-disable-line
+      return keys.length > 0
+        ? this.states[keys[0]]
+        : new Error('state machine must have at least on state');
+    }
+
+    const stateObject = this.states[state];
+    if (stateObject) {
+      return stateObject;
+    }
+    return new Error('destination state is invalid');
+  };
+
+  /**
+   * @return {any} any value return from onLeaveState function
+   */
+  handleLeaveState = () => {
+    const onLeaveState = this.getCurrentStateObject().onLeaveState;
+    if (onLeaveState) {
+      return onLeaveState();
+    }
+  };
+
+  /**
+   * @return {any} any value return from onEnterState function
+   */
+  handleEnterState = () => {
+    const onEnterState = this.states[this.getCurrentStateObject()].onEnterState;
+    if (onEnterState) {
+      return onEnterState();
+    }
   };
 
   /**
@@ -31,10 +72,17 @@ class Machine {
    * @param {Function} callBack
    * @return {undefined}
    */
-  transition = (transitionName, callBack) => {
-    const currentState = this.states[this.getCurrentState()];
-    currentState.setUpdater(this.updater);
-    return currentState.doTransition(transitionName, callBack);
+  transition = transitionName => {
+    const currentState = this.getCurrentStateObject();
+    const nextTransition =
+      currentState.getTransitions() &&
+      currentState.getTransitions()[transitionName];
+
+    if (nextTransition) {
+      this.setCurrentStateObject(nextTransition.to);
+      this.currentState = nextTransition.to;
+      this.previousState = nextTransition.from;
+    }
   };
 }
 

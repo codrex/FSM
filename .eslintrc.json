@@ -3,7 +3,8 @@
     "document": true,
     "window": true,
     "localStorage": true,
-    "scope": true
+    "scope": true,
+    "jest": true
   },
   "parser": "babel-eslint",
   "parserOptions": {
