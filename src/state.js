@@ -4,29 +4,30 @@
 class State {
   /**
    * @param {Object} stateTransitions
+   * @param {Object} stateActions
    * @param {Object} stateData
    * @return {undefined}
    */
-  constructor(stateTransitions, stateData) {
+  constructor(stateTransitions, stateActions = [], stateData) {
     const transitions = this.createTransitionObject(stateTransitions);
-    this.getTransitions = () => {
-      return transitions;
-    };
-    this.stateDate = stateData || {};
-  }
+    const actions = [...stateActions];
 
-  /**
-   *
-   * @param {Function} updater
-   * @return {undefined}
-   */
-  setUpdater(updater) {
-    this.FSMUpdater = updater;
+    this.getTransitions = () => {
+      return { ...transitions };
+    };
+
+    this.getActions = () => {
+      return [...actions];
+    };
+
+    this.stateDate = stateData || {};
+    this.onEnterState = null;
+    this.onLeaveState = null;
   }
 
   /**
    * @param {Array} transitions
-   * @return {undefined}
+   * @return {Object} stateTransitionObject
    */
   createTransitionObject = transitions => {
     if (transitions) {
@@ -44,28 +45,19 @@ class State {
   };
 
   /**
-   *
-   * @param {string} transitionName
-   * @param {Function} validationCB
-   * @return {undefined}
+   * @param {Object} inputs
+   * @return {string}transition
    */
-  doTransition(transitionName, validationCB) {
-    const transitions = this.getTransitions();
-    const hasOwnProperty = Object.prototype.hasOwnProperty.call(
-      transitions,
-      transitionName
-    );
-
-    if (hasOwnProperty && validationCB) {
-      if (validationCB()) {
-        return this.FSMUpdater(transitions[transitionName]);
+  getTransitionName = inputs => {
+    const actions = this.getActions();
+    for (let index = 0; index < actions.length; index += 1) {
+      const transition = actions[index].getTransition(inputs);
+      if (transition) {
+        return transition;
       }
-      return;
     }
-    if (hasOwnProperty) {
-      return this.FSMUpdater(transitions[transitionName]);
-    }
-  }
+    return '';
+  };
 }
 
 export default State;
