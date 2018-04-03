@@ -11,13 +11,12 @@ class State {
   constructor(stateTransitions, stateActions = [], stateData) {
     const transitions = this.createTransitionObject(stateTransitions);
     const actions = [...stateActions];
-
     this.getTransitions = () => {
       return { ...transitions };
     };
 
     this.getActions = () => {
-      return [...actions];
+      return actions;
     };
 
     this.stateDate = stateData || {};
@@ -50,6 +49,7 @@ class State {
    */
   getTransitionName = inputs => {
     const actions = this.getActions();
+
     for (let index = 0; index < actions.length; index += 1) {
       const transition = actions[index].getTransition(inputs);
       if (transition) {
