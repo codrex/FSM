@@ -8,7 +8,7 @@ class Machine {
    */
   constructor(states, currentMachineState) {
     this.states = { ...states };
-    let currentStateObject = this.setState(currentMachineState, true);
+    let currentStateObject = this.setState(currentMachineState);
 
     this.getCurrentStateObject = () => {
       return currentStateObject;
@@ -26,14 +26,15 @@ class Machine {
    * @param {bool} isInitialState
    * @return {Object} current state object or an error object
    */
-  setState = (state, isInitialState) => {
+  setState = (state = '') => {
     const type = typeof state;
     if (type !== 'string') {
       return new Error('expected a string for initial but got ' + type);
     }
 
-    if (isInitialState) {
+    if (!state) {
       const keys = Object.keys(this.states); //eslint-disable-line
+      this.currentState = keys[0] || '';
       return keys.length > 0
         ? this.states[keys[0]]
         : new Error('state machine must have at least on state');
@@ -83,6 +84,12 @@ class Machine {
       this.currentState = nextTransition.to;
       this.previousState = nextTransition.from;
     }
+  };
+
+  input = input => {
+    if (typeof input !== 'object' || Array.isArray(input)) return;
+    const name = this.getCurrentStateObject().getTransitionName(input);
+    this.transition(name);
   };
 }
 
